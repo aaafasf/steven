@@ -9,6 +9,7 @@ on:
 jobs:
   build-test:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout repo
         uses: actions/checkout@v3
@@ -18,16 +19,20 @@ jobs:
         with:
           python-version: '3.10'
 
-      - name: Install dependencies
+      - name: Install dependencies (if exists)
         run: |
           if [ -f requirements.txt ]; then
             pip install -r requirements.txt
+          else
+            echo "No se encontró requirements.txt, continuando..."
           fi
 
-      - name: Run tests
+      - name: Run tests (if pytest available)
         run: |
           if pip show pytest > /dev/null 2>&1; then
-            pytest || echo "Sin tests definidos"
+            pytest || echo "No se encontraron tests, continuando..."
+          else
+            echo "pytest no está instalado, saltando tests..."
           fi
 
   docker:
@@ -44,18 +49,9 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Build Docker image
-        run: docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/steven_app:latest .
-
-      - name: Push to Docker Hub
-        run: docker push ${{ secrets.DOCKERHUB_USERNAME }}/steven_app:latest
-
-      - name: Login to GitHub Container Registry (GHCR)
-        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
-
-      - name: Tag and Push to GHCR
-        run: |
-          IMAGE_ID=ghcr.io/${{ github.repository_owner }}/steven_app:latest
-          docker tag ${{ secrets.DOCKERHUB_USERNAME }}/steven_app:latest $IMAGE_ID
-          docker push $IMAGE_ID
-
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/steven_app:latest
