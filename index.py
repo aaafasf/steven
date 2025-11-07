@@ -1,10 +1,12 @@
-import time
+from flask import Flask
+import os
 
-def sumar(a, b):
-    return a + b
+app = Flask(__name__)
+
+@app.route('/')
+def home():
+    return "Servidor corriendo correctamente en Render. Resultado: " + str(2 + 3)
 
 if __name__ == "__main__":
-    print("Resultado:", sumar(2, 3))
-    print("Servidor corriendo en Render...")
-    while True:
-        time.sleep(60)
+    port = int(os.environ.get("PORT", 10000))
+    app.run(host="0.0.0.0", port=port)
