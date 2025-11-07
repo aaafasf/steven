@@ -49,9 +49,18 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Build and push Docker image
+      - name: Build and push Docker image to Docker Hub
         uses: docker/build-push-action@v5
         with:
           context: .
           push: true
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/steven_app:latest
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/steven_app:latest
+
+      - name: Tag and push to GitHub Packages
+        run: |
+          IMAGE_NAME=ghcr.io/${{ github.repository_owner }}/steven_app:latest
+          docker tag ${{ secrets.DOCKERHUB_USERNAME }}/steven_app:latest $IMAGE_NAME
+          echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+          docker push $IMAGE_NAME
+
