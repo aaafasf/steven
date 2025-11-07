@@ -55,3 +55,10 @@ jobs:
           context: .
           push: true
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/steven_app:latest
+
+            - name: Publicar imagen en GitHub Packages
+    run: |
+      docker tag steven_app ghcr.io/${{ github.repository_owner }}/steven_app:latest
+      echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+      docker push ghcr.io/${{ github.repository_owner }}/steven_app:latest
+
